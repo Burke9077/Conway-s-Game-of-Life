@@ -23,6 +23,7 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
     private JMenuItem mi_help_about, mi_help_source;
     private int i_movesPerSecond = 3;
     private boolean[][] b_gameBoard;
+    private GameBoard gameBoard;
     
     /**
      * @param args the command line arguments
@@ -69,19 +70,22 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
         mi_help_source = new JMenuItem("Source");
         m_help.add(mi_help_about);
         m_help.add(mi_help_source);
+        // Setup the game board
+        gameBoard = new GameBoard();
+        add(gameBoard);
         // Deal with users wanting to resize the window
         this.addComponentListener(new ComponentListener() {
             @Override
             public void componentResized(ComponentEvent e) {
-                int width = e.getComponent().getWidth();
-                int height = e.getComponent().getHeight();
+                int width = getGameBoardDimension().width;
+                int height = getGameBoardDimension().height;
                 while (width%BLOCK_SIZE != 0) {
                     width++;
                 }
                 while (height%BLOCK_SIZE != 0) {
                     height++;
                 }
-                e.getComponent().setSize(new Dimension(width, height));
+                setGameBoardDimension(new Dimension(width, height));
             }
             @Override
             public void componentMoved(ComponentEvent e) {}
@@ -90,8 +94,14 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             @Override
             public void componentHidden(ComponentEvent e) {}
         });
-        GameBoard gameBoard = new GameBoard();
-        add(gameBoard);
+    }
+    
+    public Dimension getGameBoardDimension() {
+        return gameBoard.getSize();
+    }
+    
+    public void setGameBoardDimension(Dimension newDimension) {
+        gameBoard.setSize(newDimension);
     }
     
     @Override
@@ -139,15 +149,14 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
                 g.setColor(Color.RED);
                 g.fillRect(cellX, cellY, BLOCK_SIZE, BLOCK_SIZE);
             }
+            System.out.println("Width: " + getWidth() + " Height: " + getHeight());
             g.setColor(Color.BLACK);
-            g.drawRect(BLOCK_SIZE, BLOCK_SIZE, 800, 500);
-
-            for (int i = BLOCK_SIZE; i <= 800; i += BLOCK_SIZE) {
-                g.drawLine(i, BLOCK_SIZE, i, 500 + BLOCK_SIZE);
+            g.drawRect(BLOCK_SIZE, BLOCK_SIZE, getWidth()-BLOCK_SIZE*2, getHeight()-BLOCK_SIZE*2);
+            for (int i = BLOCK_SIZE; i <= getWidth()-BLOCK_SIZE*2; i += BLOCK_SIZE) {
+                g.drawLine(i, BLOCK_SIZE, i, getHeight()-BLOCK_SIZE);
             }
-
-            for (int i = BLOCK_SIZE; i <= 500; i += BLOCK_SIZE) {
-                g.drawLine(BLOCK_SIZE, i, 800 + BLOCK_SIZE, i);
+            for (int i = BLOCK_SIZE; i <= getHeight()-BLOCK_SIZE*2; i += BLOCK_SIZE) {
+                g.drawLine(BLOCK_SIZE, i, getWidth()-BLOCK_SIZE, i);
             }
         }
 
