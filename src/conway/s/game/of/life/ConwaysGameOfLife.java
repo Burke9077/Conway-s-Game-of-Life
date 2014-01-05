@@ -1,10 +1,7 @@
 package conway.s.game.of.life;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
@@ -14,7 +11,7 @@ import javax.swing.*;
  * @author burke9077
  */
 public class ConwaysGameOfLife extends JFrame implements ActionListener {
-    private static final Dimension DEFAULT_WINDOW_SIZE = new Dimension(800, 600);
+    private static final Dimension DEFAULT_WINDOW_SIZE = new Dimension(800, 604);
     private static final int BLOCK_SIZE = 10;
     private JMenuBar mb_menu;
     private JMenu m_file, m_game, m_help;
@@ -107,10 +104,11 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent ae) {
         if (ae.getSource().equals(mi_file_exit)) {
+            // Exit the game
             System.exit(0);
         } else if (ae.getSource().equals(mi_file_options)) {
+            // Put up an options panel to change the number of moves per second
             JFrame f_options = new JFrame();
-            f_options.setSize(400, 62);
             f_options.setTitle("Options");
             f_options.setLocation((Toolkit.getDefaultToolkit().getScreenSize().width - f_options.getWidth())/2, 
                 (Toolkit.getDefaultToolkit().getScreenSize().height - f_options.getHeight())/2);
@@ -130,14 +128,19 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
                 }
             });
             f_options.setVisible(true);
-        } 
+        } else if (ae.getSource().equals(mi_game_autofill)) {
+            // Put up the JFrame to let the user auto fill a certain part of the screen
+        }
     }
     
-    private class GameBoard extends JPanel {
+    private class GameBoard extends JPanel implements MouseListener {
         private List<Point> fillCells;
+        private List<Point> killCells;
 
         public GameBoard() {
-            fillCells = new ArrayList<>(25);
+            fillCells = new ArrayList<>(1);
+            killCells = new ArrayList<>(1);
+            this.addMouseListener(this);
         }
 
         @Override
@@ -146,10 +149,14 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             for (Point fillCell : fillCells) {
                 int cellX = BLOCK_SIZE + (fillCell.x * BLOCK_SIZE);
                 int cellY = BLOCK_SIZE + (fillCell.y * BLOCK_SIZE);
-                g.setColor(Color.RED);
+                g.setColor(Color.BLUE);
                 g.fillRect(cellX, cellY, BLOCK_SIZE, BLOCK_SIZE);
             }
-            System.out.println("Width: " + getWidth() + " Height: " + getHeight());
+            for (Point killCell : killCells) {
+                int cellX = BLOCK_SIZE + (killCell.x * BLOCK_SIZE);
+                int cellY = BLOCK_SIZE + (killCell.y * BLOCK_SIZE);
+                g.clearRect(cellX, cellY, BLOCK_SIZE, BLOCK_SIZE);
+            }
             g.setColor(Color.BLACK);
             g.drawRect(BLOCK_SIZE, BLOCK_SIZE, getWidth()-BLOCK_SIZE*2, getHeight()-BLOCK_SIZE*2);
             for (int i = BLOCK_SIZE; i <= getWidth()-BLOCK_SIZE*2; i += BLOCK_SIZE) {
@@ -158,11 +165,32 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             for (int i = BLOCK_SIZE; i <= getHeight()-BLOCK_SIZE*2; i += BLOCK_SIZE) {
                 g.drawLine(BLOCK_SIZE, i, getWidth()-BLOCK_SIZE, i);
             }
+            // Setup the array based on the new game board size
+            b_gameBoard = new boolean[((getWidth()-BLOCK_SIZE*2)/10)][((getHeight()-BLOCK_SIZE*2)/10)];
+            repaint();
         }
 
         public void fillCell(int x, int y) {
             fillCells.add(new Point(x, y));
-            repaint();
         }
+        
+        public void killCell(int x, int y) {
+            killCells.add(new Point(x, y));
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent me) {
+            // Check to make sure the user clicked in a valid area
+            int xMaxValid = getWidth()-(getWidth()%10)-BLOCK_SIZE;
+            int yMaxValid = getHeight()-(getHeight()%10)-BLOCK_SIZE;
+        }
+        @Override
+        public void mouseClicked(MouseEvent me) {}
+        @Override
+        public void mousePressed(MouseEvent me) {}
+        @Override
+        public void mouseEntered(MouseEvent me) {}
+        @Override
+        public void mouseExited(MouseEvent me) {}
     }
 }
