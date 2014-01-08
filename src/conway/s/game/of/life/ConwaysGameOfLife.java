@@ -7,11 +7,12 @@ import java.util.List;
 import javax.swing.*;
 
 /**
- *
+ * Conway's game of life is a cellular animation devised by the
+ * mathematician John Conway.
  * @author burke9077
  */
 public class ConwaysGameOfLife extends JFrame implements ActionListener {
-    private static final Dimension DEFAULT_WINDOW_SIZE = new Dimension(800, 604);
+    private static final Dimension DEFAULT_WINDOW_SIZE = new Dimension(800, 600);
     private static final int BLOCK_SIZE = 10;
     private JMenuBar mb_menu;
     private JMenu m_file, m_game, m_help;
@@ -19,7 +20,7 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
     private JMenuItem mi_game_autofill, mi_game_play, mi_game_stop, mi_game_reset;
     private JMenuItem mi_help_about, mi_help_source;
     private int i_movesPerSecond = 3;
-    private boolean[][] b_gameBoard;
+    private boolean[][] b_gameBoard = new boolean[1][1];
     private GameBoard gameBoard;
     
     /**
@@ -32,6 +33,7 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
         game.setTitle("Conway's Game of Life");
         game.setIconImage(new ImageIcon(ConwaysGameOfLife.class.getResource("/images/logo.png")).getImage());
         game.setSize(DEFAULT_WINDOW_SIZE);
+        game.setMinimumSize(new Dimension(120,160));
         game.setLocation((Toolkit.getDefaultToolkit().getScreenSize().width - game.getWidth())/2, 
                 (Toolkit.getDefaultToolkit().getScreenSize().height - game.getHeight())/2);
         game.setVisible(true);
@@ -83,6 +85,8 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
                     height++;
                 }
                 setGameBoardDimension(new Dimension(width, height));
+                // Setup the array based on the new game board size
+                changeArraySize(((gameBoard.getWidth()-BLOCK_SIZE*2)/10), ((gameBoard.getHeight()-BLOCK_SIZE*2)/10));
             }
             @Override
             public void componentMoved(ComponentEvent e) {}
@@ -93,12 +97,35 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
         });
     }
     
+    public void changeArraySize(int x, int y) {
+            boolean[][] temp = b_gameBoard;
+            b_gameBoard = new boolean[x][y];
+            for (int i=0; i<temp.length; i++) {
+                for (int j=0; j<temp[0].length; j++) {
+                    if (temp[i][j]) {
+                        // Point is alive
+                        if ((i < x) && (j < y)) {
+                            // Point is still valid in new board
+                            b_gameBoard[i][j] = true;
+                        } else {
+                            // Point is not valid in new board
+                            gameBoard.killCell(i, j);
+                        }
+                    } 
+                }
+            }
+        }
+    
     public Dimension getGameBoardDimension() {
         return gameBoard.getSize();
     }
     
     public void setGameBoardDimension(Dimension newDimension) {
         gameBoard.setSize(newDimension);
+    }
+    
+    public Dimension getFrameSize() {
+        return getSize();
     }
     
     @Override
@@ -133,14 +160,15 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
         }
     }
     
-    private class GameBoard extends JPanel implements MouseListener {
+    private class GameBoard extends JPanel implements MouseListener, MouseMotionListener {
         private List<Point> fillCells;
         private List<Point> killCells;
-
+        
         public GameBoard() {
             fillCells = new ArrayList<>(1);
             killCells = new ArrayList<>(1);
-            this.addMouseListener(this);
+            addMouseMotionListener(this);
+            addMouseListener(this);
         }
 
         @Override
@@ -155,7 +183,8 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             for (Point killCell : killCells) {
                 int cellX = BLOCK_SIZE + (killCell.x * BLOCK_SIZE);
                 int cellY = BLOCK_SIZE + (killCell.y * BLOCK_SIZE);
-                g.clearRect(cellX, cellY, BLOCK_SIZE, BLOCK_SIZE);
+                g.setColor(getBackground());
+                g.fillRect(cellX, cellY, BLOCK_SIZE, BLOCK_SIZE);
             }
             g.setColor(Color.BLACK);
             g.drawRect(BLOCK_SIZE, BLOCK_SIZE, getWidth()-BLOCK_SIZE*2, getHeight()-BLOCK_SIZE*2);
@@ -165,8 +194,6 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             for (int i = BLOCK_SIZE; i <= getHeight()-BLOCK_SIZE*2; i += BLOCK_SIZE) {
                 g.drawLine(BLOCK_SIZE, i, getWidth()-BLOCK_SIZE, i);
             }
-            // Setup the array based on the new game board size
-            b_gameBoard = new boolean[((getWidth()-BLOCK_SIZE*2)/10)][((getHeight()-BLOCK_SIZE*2)/10)];
             repaint();
         }
 
@@ -177,20 +204,37 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
         public void killCell(int x, int y) {
             killCells.add(new Point(x, y));
         }
-
-        @Override
-        public void mouseReleased(MouseEvent me) {
+        
+        public void fillCell(MouseEvent me) {
             // Check to make sure the user clicked in a valid area
             int xMaxValid = getWidth()-(getWidth()%10)-BLOCK_SIZE;
             int yMaxValid = getHeight()-(getHeight()%10)-BLOCK_SIZE;
+            if ((me.getX()>=BLOCK_SIZE) && (me.getX()< xMaxValid) && (me.getY()>= BLOCK_SIZE) && (me.getY()< yMaxValid)) {
+                int xPoint = me.getX()/10-1;
+                int yPoint = me.getY()/10-1;
+                b_gameBoard[xPoint][yPoint] = true;
+                fillCell(xPoint, yPoint);
+            }
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent me) {
+            fillCell(me);
         }
         @Override
         public void mouseClicked(MouseEvent me) {}
         @Override
-        public void mousePressed(MouseEvent me) {}
+        public void mousePressed(MouseEvent me) {
+        }
         @Override
         public void mouseEntered(MouseEvent me) {}
         @Override
         public void mouseExited(MouseEvent me) {}
+        @Override
+        public void mouseDragged(MouseEvent me) {
+            fillCell(me);
+        }
+        @Override
+        public void mouseMoved(MouseEvent me) {}
     }
 }
