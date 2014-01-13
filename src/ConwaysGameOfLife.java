@@ -162,7 +162,7 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
             try {
                 desktop.browse(new URI("https://github.com/Burke9077/Conway-s-Game-of-Life"));
-            } catch (URISyntaxException | IOException | NullPointerException ex) {
+            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, "Source is available on GitHub at:\nhttps://github.com/Burke9077/Conway-s-Game-of-Life", "Source", JOptionPane.INFORMATION_MESSAGE);
             }
         } else if (ae.getSource().equals(mi_help_about)) {
@@ -172,7 +172,7 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
     
     private class GameBoard extends JPanel implements ComponentListener, MouseListener, MouseMotionListener, Runnable {
         private Dimension d_gameBoardSize = null;
-        private ArrayList<Point> point = new ArrayList<>(0);
+        private ArrayList<Point> point = new ArrayList<Point>(0);
         
         public GameBoard() {
             // Add resizing listener
@@ -182,7 +182,7 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
         }
         
         private void updateArraySize() {
-            ArrayList<Point> removeList = new ArrayList<>(0);
+            ArrayList<Point> removeList = new ArrayList<Point>(0);
             for (Point current : point) {
                 if ((current.x > d_gameBoardSize.width-1) || (current.y > d_gameBoardSize.height-1)) {
                     removeList.add(current);
@@ -286,7 +286,7 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             for (Point current : point) {
                 gameBoard[current.x+1][current.y+1] = true;
             }
-            ArrayList<Point> survivingCells = new ArrayList<>(0);
+            ArrayList<Point> survivingCells = new ArrayList<Point>(0);
             // Iterate through the array, follow game of life rules
             for (int i=1; i<gameBoard.length-1; i++) {
                 for (int j=1; j<gameBoard[0].length-1; j++) {
