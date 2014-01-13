@@ -1,4 +1,4 @@
-Conway-s-Game-of-Life
+Conway's Game of Life
 =====================
 
 Conway's game of life is a cellular animation devised by the mathematician John Conway. This is a Java, swing based representation of the game.
