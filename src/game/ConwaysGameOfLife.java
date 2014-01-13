@@ -10,7 +10,7 @@ import java.util.ConcurrentModificationException;
 import javax.swing.*;
 
 /**
- * Conway's game of life is a cellular animation devised by the
+ * Conway's game of life is a cellular automaton devised by the
  * mathematician John Conway.
  * @author burke9077
  */
