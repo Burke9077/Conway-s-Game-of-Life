@@ -2,7 +2,13 @@ package game;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
 
 /**
@@ -22,6 +28,7 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
     private JMenuItem mi_help_about, mi_help_source;
     private int i_movesPerSecond = 3;
     private GameBoard gb_gameBoard;
+    private Thread game;
     
     /**
      * @param args the command line arguments
@@ -71,7 +78,9 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
         m_game.add(mi_game_stop);
         m_game.add(mi_game_reset);
         mi_help_about = new JMenuItem("About");
+        mi_help_about.addActionListener(this);
         mi_help_source = new JMenuItem("Source");
+        mi_help_source.addActionListener(this);
         m_help.add(mi_help_about);
         m_help.add(mi_help_source);
         // Setup game board
@@ -83,9 +92,12 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
         if (isBeingPlayed) {
             mi_game_play.setEnabled(false);
             mi_game_stop.setEnabled(true);
+            game = new Thread(gb_gameBoard);
+            game.start();
         } else {
             mi_game_play.setEnabled(true);
             mi_game_stop.setEnabled(false);
+            game.interrupt();
         }
     }
         
@@ -96,7 +108,7 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             System.exit(0);
         } else if (ae.getSource().equals(mi_file_options)) {
             // Put up an options panel to change the number of moves per second
-            JFrame f_options = new JFrame();
+            final JFrame f_options = new JFrame();
             f_options.setTitle("Options");
             f_options.setSize(300,60);
             f_options.setLocation((Toolkit.getDefaultToolkit().getScreenSize().width - f_options.getWidth())/2, 
@@ -114,6 +126,7 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     i_movesPerSecond = (Integer)cb_seconds.getSelectedItem();
+                    f_options.dispose();
                 }
             });
             f_options.setVisible(true);
@@ -149,13 +162,21 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             setGameBeingPlayed(true);
         } else if (ae.getSource().equals(mi_game_stop)) {
             setGameBeingPlayed(false);
+        } else if (ae.getSource().equals(mi_help_source)) {
+            Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+            try {
+                desktop.browse(new URI("https://github.com/Burke9077/Conway-s-Game-of-Life"));
+            } catch (URISyntaxException | IOException | NullPointerException ex) {
+                JOptionPane.showMessageDialog(null, "Source is available on GitHub at:\nhttps://github.com/Burke9077/Conway-s-Game-of-Life", "Source", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } else if (ae.getSource().equals(mi_help_about)) {
+            JOptionPane.showMessageDialog(null, "Conway's game of life was a cellular animation devised by the mathematician John Conway.\nThis Java, swing based implementation was created by Matthew Burke.\n\nhttp://burke9077.com\nBurke9077@gmail.com\n@burke9077\n\nCreative Commons Attribution 4.0 International");
         }
     }
     
-    private class GameBoard extends JPanel implements ComponentListener, MouseListener, MouseMotionListener {
+    private class GameBoard extends JPanel implements ComponentListener, MouseListener, MouseMotionListener, Runnable {
         private Dimension d_gameBoardSize = null;
         private ArrayList<Point> point = new ArrayList<>(0);
-        private boolean gameIsRunning = false;
         
         public GameBoard() {
             // Add resizing listener
@@ -190,6 +211,10 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             }
         }
         
+        public void removePoint(int x, int y) {
+            point.remove(new Point(x,y));
+        }
+        
         public void resetBoard() {
             point.clear();
         }
@@ -204,21 +229,16 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             }
         }
         
-        public void setGameRunning(boolean isRunning) {
-            gameIsRunning = isRunning;
-            if (isRunning) {
-                
-            }
-        }
-        
         @Override
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
-            for (Point newPoint : point) {
-                // Draw new point
-                g.setColor(Color.blue);
-                g.fillRect(BLOCK_SIZE + (BLOCK_SIZE*newPoint.x), BLOCK_SIZE + (BLOCK_SIZE*newPoint.y), BLOCK_SIZE, BLOCK_SIZE);
-            }
+            try {
+                for (Point newPoint : point) {
+                    // Draw new point
+                    g.setColor(Color.blue);
+                    g.fillRect(BLOCK_SIZE + (BLOCK_SIZE*newPoint.x), BLOCK_SIZE + (BLOCK_SIZE*newPoint.y), BLOCK_SIZE, BLOCK_SIZE);
+                }
+            } catch (ConcurrentModificationException cme) {}
             // Setup grid
             g.setColor(Color.BLACK);
             for (int i=0; i<=d_gameBoardSize.width; i++) {
@@ -263,5 +283,46 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
         }
         @Override
         public void mouseMoved(MouseEvent e) {}
+
+        @Override
+        public void run() {
+            boolean[][] gameBoard = new boolean[d_gameBoardSize.width+2][d_gameBoardSize.height+2];
+            for (Point current : point) {
+                gameBoard[current.x+1][current.y+1] = true;
+            }
+            ArrayList<Point> survivingCells = new ArrayList<>(0);
+            // Iterate through the array, follow game of life rules
+            for (int i=1; i<gameBoard.length-1; i++) {
+                for (int j=1; j<gameBoard[0].length-1; j++) {
+                    int surrounding = 0;
+                    if (gameBoard[i-1][j-1]) { surrounding++; }
+                    if (gameBoard[i-1][j])   { surrounding++; }
+                    if (gameBoard[i-1][j+1]) { surrounding++; }
+                    if (gameBoard[i][j-1])   { surrounding++; }
+                    if (gameBoard[i][j+1])   { surrounding++; }
+                    if (gameBoard[i+1][j-1]) { surrounding++; }
+                    if (gameBoard[i+1][j])   { surrounding++; }
+                    if (gameBoard[i+1][j+1]) { surrounding++; }
+                    if (gameBoard[i][j]) {
+                        // Cell is alive, Can the cell live? (2-3)
+                        if ((surrounding == 2) || (surrounding == 3)) {
+                            survivingCells.add(new Point(i-1,j-1));
+                        } 
+                    } else {
+                        // Cell is dead, will the cell be given birth? (3)
+                        if (surrounding == 3) {
+                            survivingCells.add(new Point(i-1,j-1));
+                        }
+                    }
+                }
+            }
+            resetBoard();
+            point.addAll(survivingCells);
+            repaint();
+            try {
+                Thread.sleep(1000/i_movesPerSecond);
+                run();
+            } catch (InterruptedException ex) {}
+        }
     }
 }
