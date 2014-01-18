@@ -1,8 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import javax.swing.*;
@@ -10,7 +8,6 @@ import javax.swing.*;
 /**
  * Conway's game of life is a cellular automaton devised by the
  * mathematician John Conway.
- * @author burke9077
  */
 public class ConwaysGameOfLife extends JFrame implements ActionListener {
     private static final Dimension DEFAULT_WINDOW_SIZE = new Dimension(800, 600);
@@ -26,9 +23,6 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
     private GameBoard gb_gameBoard;
     private Thread game;
     
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String[] args) {
         // Setup the swing specifics
         JFrame game = new ConwaysGameOfLife();
