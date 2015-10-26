@@ -194,8 +194,8 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
         }
         
         public void addPoint(MouseEvent me) {
-            int x = me.getPoint().x/10-1;
-            int y = me.getPoint().y/10-1;
+            int x = me.getPoint().x/BLOCK_SIZE-1;
+            int y = me.getPoint().y/BLOCK_SIZE-1;
             if ((x >= 0) && (x < d_gameBoardSize.width) && (y >= 0) && (y < d_gameBoardSize.height)) {
                 addPoint(x,y);
             }
