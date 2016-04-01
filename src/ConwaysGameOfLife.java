@@ -10,7 +10,9 @@ import javax.swing.*;
  * mathematician John Conway.
  */
 public class ConwaysGameOfLife extends JFrame implements ActionListener {
-    private static final Dimension DEFAULT_WINDOW_SIZE = new Dimension(800, 600);
+    // default serial version ID
+	private static final long serialVersionUID = 1L;
+	private static final Dimension DEFAULT_WINDOW_SIZE = new Dimension(800, 600);
     private static final Dimension MINIMUM_WINDOW_SIZE = new Dimension(400, 400);
     private static final int BLOCK_SIZE = 10;
 
@@ -109,7 +111,7 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             f_options.add(p_options);
             p_options.add(new JLabel("Number of moves per second:"));
             Integer[] secondOptions = {1,2,3,4,5,10,15,20};
-            final JComboBox cb_seconds = new JComboBox(secondOptions);
+            final JComboBox<Integer> cb_seconds = new JComboBox<Integer>(secondOptions);
             p_options.add(cb_seconds);
             cb_seconds.setSelectedItem(i_movesPerSecond);
             cb_seconds.addActionListener(new ActionListener(){
@@ -132,7 +134,7 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             f_autoFill.add(p_autoFill);
             p_autoFill.add(new JLabel("What percentage should be filled? "));
             Object[] percentageOptions = {"Select",5,10,15,20,25,30,40,50,60,70,80,90,95};
-            final JComboBox cb_percent = new JComboBox(percentageOptions);
+            final JComboBox<Object> cb_percent = new JComboBox<Object>(percentageOptions);
             p_autoFill.add(cb_percent);
             cb_percent.addActionListener(new ActionListener() {
                 @Override
@@ -165,7 +167,9 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
     }
     
     private class GameBoard extends JPanel implements ComponentListener, MouseListener, MouseMotionListener, Runnable {
-        private Dimension d_gameBoardSize = null;
+        // default serial version ID
+		private static final long serialVersionUID = 1L;
+		private Dimension d_gameBoardSize = null;
         private ArrayList<Point> point = new ArrayList<Point>(0);
         
         public GameBoard() {
@@ -199,10 +203,6 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             if ((x >= 0) && (x < d_gameBoardSize.width) && (y >= 0) && (y < d_gameBoardSize.height)) {
                 addPoint(x,y);
             }
-        }
-        
-        public void removePoint(int x, int y) {
-            point.remove(new Point(x,y));
         }
         
         public void resetBoard() {
