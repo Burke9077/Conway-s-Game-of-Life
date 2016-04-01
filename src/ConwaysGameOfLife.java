@@ -3,6 +3,9 @@ import java.awt.event.*;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
+import java.util.TimerTask;
+import java.util.Timer;
+
 import javax.swing.*;
 
 /**
@@ -23,7 +26,8 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
     private JMenuItem mi_help_about, mi_help_source;
     private int i_movesPerSecond = 3;
     private GameBoard gb_gameBoard;
-    private Thread game;
+    private TimerTask task;
+    private Timer timer = new Timer("Stepper");
     
     public static void main(String[] args) {
         // Setup the swing specifics
@@ -84,12 +88,17 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
         if (isBeingPlayed) {
             mi_game_play.setEnabled(false);
             mi_game_stop.setEnabled(true);
-            game = new Thread(gb_gameBoard);
-            game.start();
+            task = new TimerTask() {
+                @Override
+                public void run() {
+                    gb_gameBoard.run();
+                }
+            };
+            timer.schedule(task, 0, 1000 / i_movesPerSecond);
         } else {
             mi_game_play.setEnabled(true);
             mi_game_stop.setEnabled(false);
-            game.interrupt();
+            task.cancel();
         }
     }
         
@@ -169,7 +178,7 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
     private class GameBoard extends JPanel implements ComponentListener, MouseListener, MouseMotionListener, Runnable {
         // default serial version ID
 		private static final long serialVersionUID = 1L;
-		private Dimension d_gameBoardSize = null;
+		private Dimension d_gameBoardSize = new Dimension(getWidth()/BLOCK_SIZE-2, getHeight()/BLOCK_SIZE-2);
         private ArrayList<Point> point = new ArrayList<Point>(0);
         
         public GameBoard() {
@@ -241,7 +250,7 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
 
         @Override
         public void componentResized(ComponentEvent e) {
-            // Setup the game board size with proper boundries
+            // Setup the game board size with proper boundaries
             d_gameBoardSize = new Dimension(getWidth()/BLOCK_SIZE-2, getHeight()/BLOCK_SIZE-2);
             updateArraySize();
         }
@@ -309,10 +318,6 @@ public class ConwaysGameOfLife extends JFrame implements ActionListener {
             resetBoard();
             point.addAll(survivingCells);
             repaint();
-            try {
-                Thread.sleep(1000/i_movesPerSecond);
-                run();
-            } catch (InterruptedException ex) {}
         }
     }
 }
